@@ -9,12 +9,14 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { useNetwork } from "@/hooks/useNetwork";
 
 const loginSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -26,6 +28,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 const { height, width } = Dimensions.get("window");
 
 const Login = () => {
+  const isOnline = useNetwork();
+
   const router = useRouter();
   const {
     control,
@@ -35,7 +39,42 @@ const Login = () => {
     resolver: zodResolver(loginSchema),
   });
 
+  // const onSubmit = async (data: LoginFormData) => {
+  //   const { email, password } = data;
+
+  //   try {
+  //     const { data: signInData, error } =
+  //       await supabase.auth.signInWithPassword({
+  //         email,
+  //         password,
+  //       });
+
+  //     if (error) {
+  //       alert("Error: " + error.message);
+  //       return;
+  //     }
+
+  //     // You can also check if signInData.user exists to confirm successful login
+  //     if (signInData.user) {
+  //       alert("Logged in successfully!");
+  //       router.push("/(tabs)/TodoList");
+  //     } else {
+  //       alert("Login failed: No user returned");
+  //     }
+  //   } catch (err) {
+  //     alert(
+  //       "Unexpected error: " +
+  //         (err instanceof Error ? err.message : String(err))
+  //     );
+  //   }
+  // };
+
   const onSubmit = async (data: LoginFormData) => {
+    if (!isOnline) {
+      Alert.alert("No Internet", "Please check your connection");
+      return;
+    }
+
     const { email, password } = data;
 
     try {
@@ -50,7 +89,6 @@ const Login = () => {
         return;
       }
 
-      // You can also check if signInData.user exists to confirm successful login
       if (signInData.user) {
         alert("Logged in successfully!");
         router.push("/(tabs)/TodoList");

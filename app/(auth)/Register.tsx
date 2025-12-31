@@ -9,12 +9,14 @@ import {
   Platform,
   ScrollView,
   Dimensions,
+  Alert,
 } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
+import { useNetwork } from "@/hooks/useNetwork";
 
 const registerSchema = z
   .object({
@@ -34,6 +36,7 @@ type RegisterFormData = z.infer<typeof registerSchema>;
 const { height, width } = Dimensions.get("window");
 
 const Register = () => {
+  const isOnline = useNetwork();
   const router = useRouter();
   const {
     control,
@@ -44,6 +47,10 @@ const Register = () => {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
+    if (!isOnline) {
+      Alert.alert("No Internet", "Please check your connection");
+      return;
+    }
     const { email, password } = data;
     const { error } = await supabase.auth.signUp({ email, password });
 
